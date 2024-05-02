@@ -1,9 +1,21 @@
 #! /usr/bin/python3
+<<<<<<< HEAD
 
 import cv2
 import sys
+=======
+>>>>>>> e6923986205ee9f348ceaf083574800ea8a10453
 import os
-import random
+try:
+  import cv2
+except:
+  os.system("pip3 install opencv-python")
+  import cv2
+try:
+  import sys
+except:
+  os.system("pip3 install sys")
+  import sys
 
 class CImage:
   #basic code
