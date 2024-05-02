@@ -1,7 +1,15 @@
-import cv2
-import sys
+#! /usr/bin/python3
 import os
-import random
+try:
+  import cv2
+except:
+  os.system("pip3 install opencv-python")
+  import cv2
+try:
+  import sys
+except:
+  os.system("pip3 install sys")
+  import sys
 
 class CImage:
   #basic code
