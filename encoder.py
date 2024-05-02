@@ -202,13 +202,13 @@ class CryptImageAdvanced(CImage):
     cv2.imwrite(f"{path}/{name}2.png", self.coreImg)
 
 class CryptImageAdvancedSalty(CryptImageAdvanced):
-  def __init__(self, image_path):
+  def __init__(self, image_path, salt_max=10):
     super().__init__(image_path)
     self.salt = cv2.imread(image_path)
 
     for r in range(len(self.img)):
       for p in range(len(self.img[r])):
-        self.salt[r][p] = [random.randint(0,10),random.randint(0,10),random.randint(0,10)]
+        self.salt[r][p] = [random.randint(0,salt_max),random.randint(0,salt_max),random.randint(0,salt_max)]
     
   def switchCol(self, pixel, change, salt):
     #pixel from the base image
@@ -219,20 +219,24 @@ class CryptImageAdvancedSalty(CryptImageAdvanced):
     # print(f"SALT: {salt}")
     for i in range(len(change)):
         pixel[i] = (pixel[i] + change[i] + salt[i])  # Ensure result is within valid range
-    # print(f"PIXEL{pixel}")
+    # print(f"PIXEL+salt+change{pixel}")
     return pixel
+
+
 
   def getChar(self, pixel, otherPixel, saltPixel):
     #pixel from the image that is pixel+salt+change
     #otherPixel from the image that is pixel
     #saltPixel from the image that is salt
-    # print(f"PIXEL{pixel}")
-    # print(f"CHANGE:{otherPixel}")
+    # print(f"PIXEL+salt+change{pixel}")
+    # print(f"Old Pixel:{otherPixel}")
     # print(f"SALT: {saltPixel}")
     charVal = []
     for i in range(len(pixel)):
-        charVal.append((pixel[i] - otherPixel[i] - saltPixel[i]))  # Ensure result is within valid range
-    # print(f"PIXEL{pixel}")
+        diff = pixel[i] - otherPixel[i] - saltPixel[i]
+        # Ensure result is within valid range (0 to 255)
+        charVal.append(max(0, min(diff, 255)))
+    # print(f"Change: {pixel}")
     return self.getLetter(charVal)
 
 
@@ -248,15 +252,15 @@ class CryptImageAdvancedSalty(CryptImageAdvanced):
         
   def decrypt(self, otherImgPath, salt):
     otherImg = cv2.imread(otherImgPath)
-    salt = cv2.imread(salt)
-    # print(salt[0][0])
+    self.salt = cv2.imread(salt)
+    
     str = ""
 
     for r in range(len(self.img)):
       for p in range(len(self.img[r])):
-        pixel = self.img[r][p]
-        otherPixel = otherImg[r][p]
-        saltPixel = self.salt[r][p]
+        pixel = self.img[r][p].astype(int)
+        otherPixel = otherImg[r][p].astype(int)
+        saltPixel = self.salt[r][p].astype(int)
         char = ""
         if pixel[0] != otherPixel[0] or pixel[1] != otherPixel[1] or pixel[2] != otherPixel[2]:
           char = self.getChar(pixel,otherPixel,saltPixel)
@@ -268,7 +272,11 @@ class CryptImageAdvancedSalty(CryptImageAdvanced):
 
   def save(self, path, name):
     # print(self.salt[0][0])
-    os.mkdir(path)
+    try:
+      os.mkdir(path)
+    except:
+      pass
+
     cv2.imwrite(f"{path}/{name}1.png", self.img)
     cv2.imwrite(f"{path}/{name}2.png", self.coreImg)
     cv2.imwrite(f"{path}/{name}3.png", self.salt)
@@ -301,6 +309,22 @@ def main():
       encoder.setMsg(msg)
       encoder.save(dest, name)
 
+    if "-salt" in sys.argv:
+      sys.argv.remove("-salt")
+      msg, src, dest = getargs()
+      try:
+        name = sys.argv[4]
+      except:
+        name = dest
+        
+      try:
+        salt = int(sys.argv[5])
+      except:
+        salt = 10
+      encoder = CryptImageAdvancedSalty(src, salt)
+      encoder.setMsg(msg)
+      encoder.save(dest, name)
+
     print(f"Saved Message in {dest}")
     
   elif "-d" in sys.argv:
@@ -318,13 +342,21 @@ def main():
         decoder = CryptImageAdvanced(src)
         msg = decoder.decrypt(other)
         print(msg)
+      if "-salt" in sys.argv:
+        sys.argv.remove("-salt")
+        src = sys.argv[1]
+        other = sys.argv[2]
+        salt = sys.argv[3]
+        decoder = CryptImageAdvancedSalty(src)
+        msg = decoder.decrypt(other, salt)
+        print(msg)
 
 
   else:
       salty = CryptImageAdvancedSalty("base.png")
-      salty.setMsg("Hello World")
+      salty.setMsg("Hello World"*100)
       salty.save("salty","salty")
-      print("\n\n\n\n")
+
       salty = CryptImageAdvancedSalty("salty/salty1.png")
       msg = salty.decrypt("salty/salty2.png","salty/salty3.png")
       print(msg)
