@@ -1,10 +1,4 @@
 #! /usr/bin/python3
-<<<<<<< HEAD
-
-import cv2
-import sys
-=======
->>>>>>> e6923986205ee9f348ceaf083574800ea8a10453
 import os
 try:
   import cv2
