@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import os
+import random
 try:
   import cv2
 except:
@@ -289,6 +290,8 @@ class CryptImageAdvancedSalty(CryptImageAdvanced):
     cv2.imwrite(f"{path}/{name}1.png", self.img)
     cv2.imwrite(f"{path}/{name}2.png", self.coreImg)
     cv2.imwrite(f"{path}/{name}3.png", self.salt)
+
+
 
 def main():
 
